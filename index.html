@@ -155,13 +155,53 @@
             font-size: 2.25rem; 
         }
 
+        /* Animated keyboard styling */
+        .keyboard-logo {
+            width: 3rem;
+            height: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .key {
+            width: 0.5rem;
+            height: 0.5rem;
+            background-color: currentColor;
+            border-radius: 0.125rem;
+            margin: 0.125rem;
+            opacity: 0.7;
+            animation: press 1.5s infinite;
+        }
+
+        .key:nth-child(2) { animation-delay: 0.1s; }
+        .key:nth-child(3) { animation-delay: 0.2s; }
+        .key:nth-child(4) { animation-delay: 0.3s; }
+        .key:nth-child(5) { animation-delay: 0.4s; }
+        .key:nth-child(6) { animation-delay: 0.5s; }
+
+        @keyframes press {
+            0%, 100% { transform: translateY(0); opacity: 0.7; }
+            50% { transform: translateY(2px); opacity: 1; }
+        }
+
     </style>
 </head>
 <body class="green-theme flex flex-col min-h-screen justify-center items-center p-4">
 
     <!-- Header -->
     <header class="w-full max-w-4xl flex justify-between items-center py-4 mb-8">
-        <h1 class="text-3xl font-bold">TypeGo</h1>
+        <div class="flex items-center space-x-2">
+            <!-- Animated Keyboard Logo -->
+            <div class="keyboard-logo">
+                <div class="key"></div>
+                <div class="key"></div>
+                <div class="key"></div>
+                <div class="key"></div>
+                <div class="key"></div>
+                <div class="key"></div>
+            </div>
+            <h1 class="text-3xl font-bold">TypeGo</h1>
+        </div>
         <div class="flex space-x-4">
             <button id="restart-btn" class="p-2 rounded-md hover:bg-white hover:bg-opacity-10 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-refresh-cw">
@@ -650,3 +690,4 @@
     </script>
 </body>
 </html>
+
