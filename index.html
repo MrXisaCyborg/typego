@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typego</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        .dark-theme {
+            background-color: #212529;
+            color: #d8dee9;
+            --active-color: #3b82f6; /* Blue */
+            --active-bg: color-mix(in srgb, #3b82f6 20%, transparent);
+        }
+
+        .light-theme {
+            background-color: #e5e5e5;
+            color: #1a1a1a;
+            --active-color: #3b82f6; /* Blue */
+            --active-bg: color-mix(in srgb, #3b82f6 20%, transparent);
+        }
+
+        .green-theme {
+            background-color: #1a2221;
+            color: #2e9f65;
+            --active-color: #2e9f65; /* Green */
+            --active-bg: color-mix(in srgb, #2e9f65 20%, transparent);
+        }
+
+        .blue-theme {
+            background-color: #17212e;
+            color: #4b88a9;
+            --active-color: #4b88a9; /* Blue */
+            --active-bg: color-mix(in srgb, #4b88a9 20%, transparent);
+        }
+
+        .red-theme {
+            background-color: #2e1717;
+            color: #e54c4c;
+            --active-color: #e54c4c; /* Red */
+            --active-bg: color-mix(in srgb, #e54c4c 20%, transparent);
+        }
+
+        .purple-theme {
+            background-color: #27172e;
+            color: #9955d8;
+            --active-color: #9955d8; /* Purple */
+            --active-bg: color-mix(in srgb, #9955d8 20%, transparent);
+        }
+        
+        .yellow-theme {
+            background-color: #2e2817;
+            color: #d8ad55;
+            --active-color: #d8ad55; /* Yellow */
+            --active-bg: color-mix(in srgb, #d8ad55 20%, transparent);
+        }
+
+        .pink-theme {
+            background-color: #2e1728;
+            color: #d855ad;
+            --active-color: #d855ad; /* Pink */
+            --active-bg: color-mix(in srgb, #d855ad 20%, transparent);
+        }
+        
+        .orange-theme {
+            background-color: #2e1c17;
+            color: #d88c55;
+            --active-color: #d88c55; /* Orange */
+            --active-bg: color-mix(in srgb, #d88c55 20%, transparent);
+        }
+
+        .cyan-theme {
+            background-color: #172e2e;
+            color: #55d8d8;
+            --active-color: #55d8d8; /* Cyan */
+            --active-bg: color-mix(in srgb, #55d8d8 20%, transparent);
+        }
+
+        .monokai-theme {
+            background-color: #272822;
+            color: #f8f8f2;
+            --active-color: #f92672; /* Pink/Purple */
+            --active-bg: color-mix(in srgb, #f92672 20%, transparent);
+        }
+
+        .correct {
+            color: var(--active-color); 
+        }
+
+        .incorrect {
+            color: #e54c4c; /* A shade of red */
+        }
+        
+        /* The `incorrect-char` class is specifically for highlighting wrong characters */
+        .incorrect-char {
+            color: #e54c4c;
+        }
+
+        .current-word {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 2px;
+        }
+        
+        .current-word .current-char {
+            border-bottom: 2px solid;
+            display: inline-block;
+        }
+
+        .stats-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .stats-card p {
+            font-size: 2.25rem; /* Ensure all numbers have the same font size */
+        }
+
+
+        .theme-button.active {
+            box-shadow: 0 0 0 2px var(--active-color);
+            transform: scale(1.1);
+        }
+
+        .difficulty-button.active {
+            border: 1px solid var(--active-color);
+            background-color: var(--active-bg);
+        }
+        /* Adjusted stats card for a more consistent layout */
+        .stats-card-characters {
+            padding: 0.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Adjusted font size for title to match others */
+        .stats-card-characters h3 {
+            font-size: 1.25rem;
+        }
+
+        /* Adjusted font size for numbers to be consistent */
+        .stats-card-characters p {
+            font-size: 2.25rem; 
+        }
+
+    </style>
+</head>
+<body class="green-theme flex flex-col min-h-screen justify-center items-center p-4">
+
+    <!-- Header -->
+    <header class="w-full max-w-4xl flex justify-between items-center py-4 mb-8">
+        <h1 class="text-3xl font-bold">TypeGo</h1>
+        <div class="flex space-x-4">
+            <button id="restart-btn" class="p-2 rounded-md hover:bg-white hover:bg-opacity-10 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-refresh-cw">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.5 10a8.9 8.9 0 0 1 16 0"></path>
+                    <path d="M20.5 14a8.9 8.9 0 0 1-16 0"></path>
+                </svg>
+            </button>
+            <button id="theme-btn" class="p-2 rounded-md hover:bg-white hover:bg-opacity-10 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-droplet">
+                    <path d="M12.68 5.68A6.87 6.87 0 0 0 12 5.56a7.5 7.5 0 0 0-7.5 7.5c0 4.14 7.5 9 7.5 9s7.5-4.86 7.5-9a7.5 7.5 0 0 0-7.5-7.5Z"></path>
+                    <path d="M12 21.5c-2.76 0-5-2.24-5-5s2.24-5 5-5s5 2.24 5 5-2.24 5-5 5Z" fill="white" opacity="0.1"></path>
+                    <path d="M16 12L8 4"></path>
+                    <path d="M12 21.5C9.24 21.5 7 19.26 7 16.5S9.24 11.5 12 11.5 17 13.74 17 16.5 14.76 21.5 12 21.5Z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Difficulty & Test Options -->
+    <div class="w-full max-w-4xl flex justify-center items-center space-x-4 mb-8">
+        <button id="easy-btn" class="difficulty-button px-4 py-2 rounded-lg transition-colors duration-200">Easy</button>
+        <button id="medium-btn" class="difficulty-button px-4 py-2 rounded-lg transition-colors duration-200 active">Medium</button>
+        <button id="hard-btn" class="difficulty-button px-4 py-2 rounded-lg transition-colors duration-200">Hard</button>
+    </div>
+
+    <!-- Theme Selection Modal -->
+    <div id="theme-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white dark-theme p-6 rounded-xl shadow-lg w-full max-w-sm">
+            <h2 class="text-xl font-bold mb-4">Choose a Theme</h2>
+            <div id="theme-options" class="grid grid-cols-4 gap-4">
+                <button class="theme-button w-12 h-12 rounded-full dark-theme border-2 border-transparent transition transform hover:scale-105" data-theme="dark"></button>
+                <button class="theme-button w-12 h-12 rounded-full light-theme border-2 border-transparent transition transform hover:scale-105" data-theme="light"></button>
+                <button class="theme-button w-12 h-12 rounded-full green-theme border-2 border-transparent transition transform hover:scale-105" data-theme="green"></button>
+                <button class="theme-button w-12 h-12 rounded-full blue-theme border-2 border-transparent transition transform hover:scale-105" data-theme="blue"></button>
+                <button class="theme-button w-12 h-12 rounded-full red-theme border-2 border-transparent transition transform hover:scale-105" data-theme="red"></button>
+                <button class="theme-button w-12 h-12 rounded-full purple-theme border-2 border-transparent transition transform hover:scale-105" data-theme="purple"></button>
+                <button class="theme-button w-12 h-12 rounded-full yellow-theme border-2 h-12 rounded-full yellow-theme border-2 border-transparent transition transform hover:scale-105" data-theme="yellow"></button>
+                <button class="theme-button w-12 h-12 rounded-full pink-theme border-2 border-transparent transition transform hover:scale-105" data-theme="pink"></button>
+                <button class="theme-button w-12 h-12 rounded-full orange-theme border-2 border-transparent transition transform hover:scale-105" data-theme="orange"></button>
+                <button class="theme-button w-12 h-12 rounded-full cyan-theme border-2 border-transparent transition transform hover:scale-105" data-theme="cyan"></button>
+                <button class="theme-button w-12 h-12 rounded-full monokai-theme border-2 border-transparent transition transform hover:scale-105" data-theme="monokai"></button>
+            </div>
+            <button id="close-modal" class="mt-6 w-full py-2 px-4 rounded-md bg-white bg-opacity-20 hover:bg-opacity-30 transition">Close</button>
+        </div>
+    </div>
+    
+    <!-- Main Typing Area -->
+    <main class="w-full max-w-4xl text-center flex-grow flex flex-col justify-center">
+        <div id="words-container" class="text-3xl tracking-wide leading-relaxed p-4 rounded-xl transition text-center">
+            <!-- Words will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <!-- Stats & Results -->
+    <div id="stats-container" class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 opacity-0 transition-opacity duration-500">
+        <div class="stats-card">
+            <h3 class="text-xl font-bold">WPM</h3>
+            <p id="wpm" class="mt-2">0</p>
+        </div>
+        <div class="stats-card">
+            <h3 class="text-xl font-bold">Accuracy</h3>
+            <p id="accuracy" class="mt-2">0%</p>
+        </div>
+        <div class="stats-card">
+            <h3 class="text-xl font-bold">Characters</h3>
+            <p id="characters" class="mt-2">0/0</p>
+        </div>
+        <div class="stats-card">
+            <h3 class="text-xl font-bold">Time</h3>
+            <p id="timer" class="mt-2">0s</p>
+        </div>
+    </div>
+    
+    <!-- Final Results Modal -->
+    <div id="results-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="stats-card w-full max-w-xl text-center">
+            <h2 class="text-3xl font-bold mb-4">Final Results</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="p-4 rounded-md bg-opacity-10 bg-white">
+                    <h3 class="text-xl font-bold">WPM</h3>
+                    <p id="final-wpm" class="mt-2">0</p>
+                </div>
+                <div class="p-4 rounded-md bg-opacity-10 bg-white">
+                    <h3 class="text-xl font-bold">Accuracy</h3>
+                    <p id="final-accuracy" class="mt-2">0%</p>
+                </div>
+                <div class="p-4 rounded-md bg-opacity-10 bg-white">
+                    <h3 class="text-xl font-bold">Characters</h3>
+                    <p id="final-characters" class="mt-2">0/0</p>
+                </div>
+                <div class="p-4 rounded-md bg-opacity-10 bg-white">
+                    <h3 class="text-xl font-bold">Time</h3>
+                    <p id="final-timer" class="mt-2">0s</p>
+                </div>
+            </div>
+            <div class="w-full flex justify-center">
+                <canvas id="wpm-graph" class="w-full h-auto max-h-64"></canvas>
+            </div>
+            <button id="restart-final-btn" class="mt-4 w-full py-2 px-4 rounded-md bg-white bg-opacity-20 hover:bg-opacity-30 transition">Restart Test</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-4xl text-center py-4 mt-8 text-sm">
+        <p>&copy; 2025 TypeGo. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const wordsContainer = document.getElementById('words-container');
+            const wpmDisplay = document.getElementById('wpm');
+            const accuracyDisplay = document.getElementById('accuracy');
+            const charactersDisplay = document.getElementById('characters');
+            const timerDisplay = document.getElementById('timer');
+            const restartBtn = document.getElementById('restart-btn');
+            const statsContainer = document.getElementById('stats-container');
+            const themeBtn = document.getElementById('theme-btn');
+            const themeModal = document.getElementById('theme-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const themeButtons = document.querySelectorAll('.theme-button');
+            const body = document.body;
+            const easyBtn = document.getElementById('easy-btn');
+            const mediumBtn = document.getElementById('medium-btn');
+            const hardBtn = document.getElementById('hard-btn');
+            const resultsModal = document.getElementById('results-modal');
+            const restartFinalBtn = document.getElementById('restart-final-btn');
+            const difficultyButtons = document.querySelectorAll('.difficulty-button');
+            let wpmChart = null;
+
+            const easyWords = ["the", "of", "and", "a", "to", "in", "is", "you", "that", "it", "he", "was", "for", "on", "are", "as", "with", "his", "they", "at", "be", "this", "from", "I", "have", "or", "by", "one", "had", "not", "but"];
+            const mediumWords = ["about", "would", "which", "make", "get", "me", "into", "year", "your", "good", "some", "could", "them", "see", "other", "than", "then", "now", "look", "only", "come", "its", "over", "think", "also", "back", "after", "use", "two", "how", "our", "work", "first", "well", "way", "even", "new", "want", "because", "any", "these", "give", "day", "most", "us", "word"];
+            const hardWords = ["through", "long", "where", "much", "turn", "live", "same", "tell", "show", "help", "own", "did", "small", "was", "read", "each", "until", "high", "here", "why", "need", "should", "off", "put", "let", "part", "set", "below", "while", "last", "wasn't", "very", "every", "find", "with", "just", "man", "many", "before", "down", "did", "be", "on", "into", "use", "now", "by", "from", "my", "one", "will", "who", "would", "about", "what", "which", "make", "get", "me", "because", "can", "don't", "something", "sometimes", "without", "another", "between", "against", "might", "mightn't", "didn't", "couldn't", "wouldn't", "shouldn't", "cannot"];
+
+            let selectedWords = [];
+            let currentWords = [];
+            let wordIndex = 0;
+            let characterIndex = 0;
+            let timer = 0;
+            let intervalId = null;
+            let totalTyped = 0;
+            let totalCorrect = 0;
+            let isStarted = false;
+            let currentTheme = 'green';
+            let wpmHistory = [];
+            
+            const wordsPerDifficulty = 50;
+
+            const generateWords = () => {
+                let sourceWords = [];
+                if (document.getElementById('easy-btn').classList.contains('active')) {
+                    sourceWords = easyWords;
+                } else if (document.getElementById('medium-btn').classList.contains('active')) {
+                    sourceWords = mediumWords;
+                } else if (document.getElementById('hard-btn').classList.contains('active')) {
+                    sourceWords = hardWords;
+                }
+                
+                // Shuffle words and pick a fixed number for the test
+                const shuffled = [...sourceWords].sort(() => 0.5 - Math.random());
+                currentWords = shuffled.slice(0, wordsPerDifficulty);
+
+                renderWords();
+            };
+
+            const renderWords = () => {
+                wordsContainer.innerHTML = '';
+                currentWords.forEach((word, wordIdx) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word inline-block mr-2';
+                    if (wordIdx === wordIndex) {
+                        wordSpan.classList.add('current-word');
+                    }
+                    word.split('').forEach((char, charIdx) => {
+                        const charSpan = document.createElement('span');
+                        charSpan.textContent = char;
+                        if (wordIdx === wordIndex && charIdx === characterIndex) {
+                             charSpan.classList.add('current-char');
+                        }
+                        wordSpan.appendChild(charSpan);
+                    });
+                    wordsContainer.appendChild(wordSpan);
+                });
+            };
+
+            const updateStats = () => {
+                const elapsedTime = timer / 60; // in minutes
+                const wpm = elapsedTime > 0 ? Math.round((totalCorrect / 5) / elapsedTime) : 0;
+                const accuracy = totalTyped > 0 ? Math.min(100, Math.round((totalCorrect / totalTyped) * 100)) : 0;
+                
+                wpmDisplay.textContent = wpm;
+                accuracyDisplay.textContent = `${accuracy}%`;
+                charactersDisplay.textContent = `${totalCorrect}/${totalTyped}`;
+                timerDisplay.textContent = `${timer}s`;
+            };
+
+            const startGame = () => {
+                if(isStarted) return;
+                isStarted = true;
+                statsContainer.classList.remove('opacity-0');
+                
+                intervalId = setInterval(() => {
+                    timer++;
+                    timerDisplay.textContent = `${timer}s`;
+                    
+                    const elapsedTime = timer / 60;
+                    const wpm = elapsedTime > 0 ? Math.round((totalCorrect / 5) / elapsedTime) : 0;
+                    wpmHistory.push(wpm);
+                    
+                    updateStats();
+                }, 1000);
+            };
+
+            const drawGraph = (data) => {
+                const ctx = document.getElementById('wpm-graph').getContext('2d');
+                if (wpmChart) {
+                    wpmChart.destroy();
+                }
+
+                const themeColor = getComputedStyle(document.body).getPropertyValue('--active-color').trim();
+                const primaryTextColor = getComputedStyle(document.body).color;
+                
+                wpmChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map((_, i) => i + 1),
+                        datasets: [{
+                            label: 'WPM',
+                            data: data,
+                            borderColor: themeColor,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointBackgroundColor: themeColor,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time (seconds)',
+                                    color: primaryTextColor
+                                },
+                                ticks: {
+                                    color: primaryTextColor
+                                },
+                                grid: {
+                                    color: 'rgba(255,255,255,0.1)'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'WPM',
+                                    color: primaryTextColor
+                                },
+                                ticks: {
+                                    color: primaryTextColor
+                                },
+                                grid: {
+                                    color: 'rgba(255,255,255,0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const endGame = () => {
+                isStarted = false;
+                clearInterval(intervalId);
+                
+                document.getElementById('final-wpm').textContent = wpmDisplay.textContent;
+                document.getElementById('final-accuracy').textContent = accuracyDisplay.textContent;
+                document.getElementById('final-characters').textContent = `${totalCorrect}/${totalTyped}`;
+                document.getElementById('final-timer').textContent = timerDisplay.textContent;
+                
+                // Show graph
+                drawGraph(wpmHistory);
+
+                wordsContainer.classList.add('hidden');
+                resultsModal.classList.remove('hidden');
+                resultsModal.classList.add('flex');
+            };
+
+            const resetGame = () => {
+                isStarted = false;
+                clearInterval(intervalId);
+                timer = 0;
+                wordIndex = 0;
+                characterIndex = 0;
+                totalTyped = 0;
+                totalCorrect = 0;
+                wpmHistory = []; // Reset history
+                statsContainer.classList.add('opacity-0');
+                wordsContainer.classList.remove('hidden');
+                
+                generateWords();
+                updateStats();
+            };
+
+            const applyTheme = (themeName) => {
+                const themes = ['dark', 'light', 'green', 'blue', 'red', 'purple', 'yellow', 'pink', 'orange', 'cyan', 'monokai'];
+                body.classList.remove(...themes.map(t => `${t}-theme`));
+                body.classList.add(`${themeName}-theme`);
+                currentTheme = themeName;
+
+                themeButtons.forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-theme="${themeName}"]`).classList.add('active');
+
+                // Re-apply the active state to the difficulty button to update its color
+                const activeDifficultyButton = document.querySelector('.difficulty-button.active');
+                if (activeDifficultyButton) {
+                    const difficulty = activeDifficultyButton.id.replace('-btn', '');
+                    setDifficulty(difficulty, true); // Pass true to only update style
+                }
+            };
+            
+
+            const setDifficulty = (difficulty, styleOnly = false) => {
+                difficultyButtons.forEach(btn => btn.classList.remove('active'));
+                const activeBtn = document.getElementById(`${difficulty}-btn`);
+                activeBtn.classList.add('active');
+
+                if (!styleOnly) {
+                    generateWords();
+                    resetGame();
+                }
+            };
+            
+            // Initial setup
+            generateWords();
+            setDifficulty('medium'); // Set initial difficulty and styling
+            applyTheme('green');
+
+            document.addEventListener('keydown', (e) => {
+                // Ignore special keys like Ctrl, Shift, Alt, etc.
+                if (e.key.length !== 1 && e.key !== 'Backspace' && e.key !== 'Enter' && e.key !== ' ') {
+                    return;
+                }
+                
+                if (!isStarted && e.key.length === 1 && e.key !== ' ' && e.key !== 'Enter') {
+                    startGame();
+                }
+                
+                if(e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                }
+                
+                const currentWord = currentWords[wordIndex];
+                if (!currentWord) return;
+
+                const currentWordSpans = wordsContainer.children[wordIndex].children;
+                
+                if (e.key === 'Backspace') {
+                    if (characterIndex > 0) {
+                        characterIndex--;
+                        
+                        const charSpan = currentWordSpans[characterIndex];
+                        if (charSpan.classList.contains('incorrect')) {
+                            // If the previous character was incorrect, we don't change totalCorrect, just remove the class
+                        } else {
+                            // If it was correct, we decrement totalCorrect
+                            totalCorrect--;
+                        }
+                        
+                        charSpan.classList.remove('correct', 'incorrect');
+                        // Move the current-char class back
+                        if (currentWordSpans[characterIndex + 1]) {
+                             currentWordSpans[characterIndex + 1].classList.remove('current-char');
+                        }
+                        charSpan.classList.add('current-char');
+                        totalTyped--; 
+                    } else if (wordIndex > 0) {
+                         // Backspace at the start of a word moves to the previous word
+                         if (wordsContainer.children[wordIndex] && wordsContainer.children[wordIndex].children.length > 0) {
+                             wordsContainer.children[wordIndex].children[0].classList.remove('current-char');
+                         }
+                         
+                         wordIndex--;
+                         const prevWord = currentWords[wordIndex];
+                         characterIndex = prevWord.length;
+
+                         if (wordsContainer.children[wordIndex]) {
+                             const prevWordSpans = wordsContainer.children[wordIndex].children;
+                             if (prevWordSpans[characterIndex - 1]) {
+                                 prevWordSpans[characterIndex - 1].classList.add('current-char');
+                             }
+                         }
+                    }
+                    updateStats();
+                } else if (e.key === ' ' || e.key === 'Enter') {
+                    if (characterIndex >= currentWord.length) {
+                        if(currentWordSpans[characterIndex - 1]) {
+                            currentWordSpans[characterIndex - 1].classList.remove('current-char');
+                        }
+                        if(wordsContainer.children[wordIndex]) {
+                            wordsContainer.children[wordIndex].classList.remove('current-word');
+                        }
+                        
+                        wordIndex++;
+                        characterIndex = 0;
+                        if (wordIndex >= currentWords.length) {
+                            endGame();
+                        } else {
+                            if(wordsContainer.children[wordIndex]) {
+                                wordsContainer.children[wordIndex].classList.add('current-word');
+                                if(wordsContainer.children[wordIndex].children[0]) {
+                                    wordsContainer.children[wordIndex].children[0].classList.add('current-char');
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if (characterIndex < currentWord.length) {
+                        const targetChar = currentWord.charAt(characterIndex);
+                        const charSpan = currentWordSpans[characterIndex];
+                        if (charSpan) {
+                           if (e.key === targetChar) {
+                               charSpan.classList.add('correct');
+                               charSpan.classList.remove('incorrect');
+                               totalCorrect++;
+                           } else {
+                               charSpan.classList.add('incorrect');
+                               charSpan.classList.remove('correct');
+                           }
+                           totalTyped++;
+                           
+                           charSpan.classList.remove('current-char');
+                           characterIndex++;
+                           if (currentWordSpans[characterIndex]) {
+                               currentWordSpans[characterIndex].classList.add('current-char');
+                           }
+                           updateStats();
+                        }
+                    } else {
+                         // User has typed past the end of the word
+                         totalTyped++;
+                         updateStats();
+                    }
+                }
+            });
+
+            restartBtn.addEventListener('click', () => {
+                resetGame();
+            });
+            restartFinalBtn.addEventListener('click', () => {
+                 resultsModal.classList.add('hidden');
+                 resultsModal.classList.remove('flex');
+                 resetGame();
+            });
+
+
+            themeBtn.addEventListener('click', () => {
+                themeModal.classList.remove('hidden');
+                themeModal.classList.add('flex');
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                themeModal.classList.add('hidden');
+                themeModal.classList.remove('flex');
+            });
+
+            themeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const themeName = btn.dataset.theme;
+                    applyTheme(themeName);
+                });
+            });
+
+            easyBtn.addEventListener('click', () => setDifficulty('easy'));
+            mediumBtn.addEventListener('click', () => setDifficulty('medium'));
+            hardBtn.addEventListener('click', () => setDifficulty('hard'));
+
+        });
+    </script>
+</body>
+</html>
